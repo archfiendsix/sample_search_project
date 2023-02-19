@@ -90,7 +90,6 @@ class HomePage {
         // const title_words = movieQuery.query_title
         //   .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, "")
         //   .split(" ");
-        cy.log("LESS SIMILAR");
         /* Validate all card results if expected_an_exact match == false */
         this.elements.searchResultsCards().each((card) => {
           cy.wrap(card)
