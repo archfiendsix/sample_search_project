@@ -102,12 +102,6 @@ class HomePage {
               ).to.be.greaterThan(movieQuery.expected_result_similarities);
             });
         });
-
-        // title_words.forEach((word) => {
-        //   this.elements.searchResultsCards().each((card) => {
-        //     cy.wrap(card).find(".movie-title").should("include.text", word);
-        //   });
-        // });
       }
     }
   };
@@ -118,11 +112,7 @@ class HomePage {
       win.navigator.clipboard.writeText(textQuery);
     });
     cy.log(textQuery);
-    // Clear and focus the search input field
-    // this.elements.searchForAMovieTextbox().click({ force: true });
 
-    // Use the 'cmd + v' keyboard shortcut to paste the text
-    // this.elements.searchForAMovieTextbox().clear({force:true}).type('{ctrl}a', { release: false, force: true ,delay: 300});
     this.elements
       .searchForAMovieTextbox()
       .should("not.be.disabled", { setTimeout: 10000 })
@@ -132,35 +122,58 @@ class HomePage {
         release: false,
         delay: 0, //Simulates paste action to textbox
       });
-
-    // this.elements.searchForAMovieTextbox().clear({force:true}).invoke('val',textQuery)
-    // this.elements.searchForAMovieTextbox().rightclick()
   };
 
+  /**
+   * Calculates the similarity between two strings using the edit distance algorithm.
+   *
+   * @param {string} s1 - The first string to compare.
+   * @param {string} s2 - The second string to compare.
+   * @returns {number} - A value between 0 and 1 representing the similarity between the two strings.
+   */
   getSimilarity = (s1, s2) => {
+    // Determine which string is longer and which is shorter
     var longer = s1;
     var shorter = s2;
     if (s1.length < s2.length) {
       longer = s2;
       shorter = s1;
     }
+
+    // Calculate the length of the longer string
     var longerLength = longer.length;
+
+    // If one of the strings is empty, they are identical
     if (longerLength == 0) {
       return 1.0;
     }
+
+    // Calculate the similarity between the two strings using the edit distance algorithm
     return (
       (longerLength - this.editDistance(longer, shorter)) /
       parseFloat(longerLength)
     );
   };
 
+  /**
+   * Calculates the edit distance between two strings using the Wagner–Fischer algorithm.
+   *
+   * @param {string} s1 - The first string to compare.
+   * @param {string} s2 - The second string to compare.
+   * @returns {number} - The edit distance between the two strings.
+   */
   editDistance = (s1, s2) => {
+    // Convert both strings to lowercase
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
 
     var costs = new Array();
+
+    // Create a new array to store the edit distances
     for (var i = 0; i <= s1.length; i++) {
       var lastValue = i;
+
+      // Calculate the edit distances for the remaining rows
       for (var j = 0; j <= s2.length; j++) {
         if (i == 0) {
           costs[j] = j;
@@ -179,6 +192,8 @@ class HomePage {
         costs[s2.length] = lastValue;
       }
     }
+
+    // Return the edit distance for the last row of the array
     return costs[s2.length];
   };
 }
