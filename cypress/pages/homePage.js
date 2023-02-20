@@ -1,22 +1,28 @@
 class HomePage {
   elements = {
     searchForAMovieTextbox: () => cy.get("movies-page").find("input#search"),
-    searchResultsCards: () =>
-      cy.get("#results .movies").find("movie-list-item", { timeout: 300 }),
+    searchResultsCards: (timeout=3000) =>
+      cy.get("#results .movies").find("movie-list-item", { timeout: timeout }),
   };
 
   searchForMovie = (searchQuery) => {
+    cy.wait(3000)
     cy.intercept("http://www.omdbapi.com/?apikey=**").as("movies_request");
     this.elements
       .searchForAMovieTextbox()
       .should("be.visible")
       .clear({ force: true })
       .type(searchQuery, { delay: 70, force: true });
-    cy.wait("@movies_request").its("response.statusCode").should("eq", 200);
+    cy.wait("@movies_request").its("response.statusCode").then(status_code=> {
+      expect(status_code, "Checking movie request status code from API...").to.equal(200)
+    
+    })
   };
 
   clickAndCheckTextboxOutline = () => {
+    cy.get("body").click();
     cy.wait(2000);
+    this.elements.searchForAMovieTextbox().should("be.visible").focus();
     this.elements
       .searchForAMovieTextbox()
       .should("not.be.disabled")
@@ -28,15 +34,26 @@ class HomePage {
       });
   };
 
+  clickAndCheckForMovieDetailsPage = () => {
+    this.elements.searchResultsCards(3000).eq(0).click();
+  };
+
+  validateMoviePageCOntent = () => {
+    cy.log("Checking movie page details...");
+  };
+
   validateResults = (movieQuery) => {
     if (movieQuery.query_title != null || movieQuery.query_title != "") {
       if (movieQuery.expected_result_similarities > 0.99) {
         /* Validate Results cards to appear on 300ms */
-        this.elements.searchResultsCards().should("have.length.gt", 0);
+        this.elements
+          .searchResultsCards(movieQuery.expected_show_result_speed)
+          .should("be.visible")
+          .should("have.length.gt", 0);
 
         /* Validate first card content */
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find(".movie-title")
           .invoke("text")
@@ -51,19 +68,19 @@ class HomePage {
         // .should("include.text", movieQuery.expected_title);
 
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find("movie-image img")
           .should("not.be.empty");
 
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find("img")
           .should("have.attr", "src", movieQuery.expected_image);
 
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find("img")
           .invoke("css", "width")
@@ -76,13 +93,13 @@ class HomePage {
           });
 
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find(".movie-info")
           .should("include.text", "Year");
 
         this.elements
-          .searchResultsCards()
+          .searchResultsCards(movieQuery.expected_show_result_speed)
           .eq(0)
           .find(".movie-year")
           .should("include.text", movieQuery.expected_year);
@@ -91,7 +108,8 @@ class HomePage {
         //   .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, "")
         //   .split(" ");
         /* Validate all card results if expected_an_exact match == false */
-        this.elements.searchResultsCards().each((card) => {
+        this.elements.searchResultsCards(movieQuery.expected_show_result_speed).should('be.visible')
+        this.elements.searchResultsCards(movieQuery.expected_show_result_speed).each((card) => {
           cy.wrap(card)
             .find(".movie-title")
             .invoke("text")
@@ -120,6 +138,7 @@ class HomePage {
       .type(textQuery, {
         paste: true,
         release: false,
+        force: true,
         delay: 0, //Simulates paste action to textbox
       });
   };
