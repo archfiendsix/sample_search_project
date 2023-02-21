@@ -1,0 +1,31 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download website code
+        uses: actions/checkout@v2
+        with:
+          repository: username/website-project
+          ref: main
+
+      - name: Install website dependencies
+        run: npm install
+        working-directory: website-project
+
+      - name: Run tests
+        run: npm run cypress
+        env:
+          CYPRESS_BASE_URL: https://example.com

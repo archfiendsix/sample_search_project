@@ -1,22 +1,26 @@
 class HomePage {
   elements = {
     searchForAMovieTextbox: () => cy.get("movies-page").find("input#search"),
-    searchResultsCards: (timeout=3000) =>
+    searchResultsCards: (timeout = 3000) =>
       cy.get("#results .movies").find("movie-list-item", { timeout: timeout }),
   };
 
   searchForMovie = (searchQuery) => {
-    cy.wait(3000)
+    cy.wait(3000);
     cy.intercept("http://www.omdbapi.com/?apikey=**").as("movies_request");
     this.elements
       .searchForAMovieTextbox()
       .should("be.visible")
       .clear({ force: true })
       .type(searchQuery, { delay: 70, force: true });
-    cy.wait("@movies_request").its("response.statusCode").then(status_code=> {
-      expect(status_code, "Checking movie request status code from API...").to.equal(200)
-    
-    })
+    cy.wait("@movies_request")
+      .its("response.statusCode")
+      .then((status_code) => {
+        expect(
+          status_code,
+          "Checking movie request status code from API..."
+        ).to.equal(200);
+      });
   };
 
   clickAndCheckTextboxOutline = () => {
@@ -108,18 +112,22 @@ class HomePage {
         //   .replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, "")
         //   .split(" ");
         /* Validate all card results if expected_an_exact match == false */
-        this.elements.searchResultsCards(movieQuery.expected_show_result_speed).should('be.visible')
-        this.elements.searchResultsCards(movieQuery.expected_show_result_speed).each((card) => {
-          cy.wrap(card)
-            .find(".movie-title")
-            .invoke("text")
-            .then((card_title_text) => {
-              expect(
-                this.getSimilarity(movieQuery.query_title, card_title_text),
-                `Checking string similarity of "${movieQuery.query_title}" and "${card_title_text}"`
-              ).to.be.greaterThan(movieQuery.expected_result_similarities);
-            });
-        });
+        this.elements
+          .searchResultsCards(movieQuery.expected_show_result_speed)
+          .should("be.visible");
+        this.elements
+          .searchResultsCards(movieQuery.expected_show_result_speed)
+          .each((card) => {
+            cy.wrap(card)
+              .find(".movie-title")
+              .invoke("text")
+              .then((card_title_text) => {
+                expect(
+                  this.getSimilarity(movieQuery.query_title, card_title_text),
+                  `Checking string similarity of "${movieQuery.query_title}" and "${card_title_text}"`
+                ).to.be.greaterThan(movieQuery.expected_result_similarities);
+              });
+          });
       }
     }
   };
